@@ -2,4 +2,3 @@ data
 train.log
 bert.pt
 bert_big.pt
-run_train.sh
