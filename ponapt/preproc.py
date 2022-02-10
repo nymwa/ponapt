@@ -5,7 +5,8 @@ from ilonimi import (
 
 class LMPreproc:
 
-    def __init__(self,
+    def __init__(
+            self,
             convert_unk = True,
             convert_number = False,
             convert_proper = False,
