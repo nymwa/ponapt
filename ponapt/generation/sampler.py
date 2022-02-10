@@ -19,10 +19,19 @@ class SentenceSampler:
             index,
             max_tokens,
             stop_ratio,
-            beta):
+            beta,
+            avoid_eos,
+            terminal):
 
         logit[self.vocab.pad] = float('-inf')
+        logit[self.vocab.bos] = float('-inf')
         logit[self.vocab.unk] = float('-inf')
+
+        if avoid_eos:
+            logit[self.vocab.eos] = float('-inf')
+            if terminal is not None:
+                for token in terminal:
+                    logit[token] = float('-inf')
 
         if index > max_tokens * stop_ratio:
             logit[self.vocab.eos] += (index - max_tokens * stop_ratio) * beta
@@ -37,7 +46,9 @@ class SentenceSampler:
             index,
             max_tokens,
             stop_ratio,
-            beta):
+            beta,
+            avoid_eos,
+            terminal):
 
         logit = calc_logit(
                 self.model,
@@ -49,7 +60,9 @@ class SentenceSampler:
                 index,
                 max_tokens,
                 stop_ratio,
-                beta)
+                beta,
+                avoid_eos,
+                terminal)
 
         next_token = top_p_sampling(
                 logit,
@@ -66,12 +79,15 @@ class SentenceSampler:
             stop_ratio = 0.3,
             beta = 1.0,
             sent = None,
-            terminal = None):
+            terminal = None,
+            min_len = None):
 
         if sent is None:
             sent = []
 
         for index in range(len(sent), max_tokens):
+
+            avoid_eos = (min_len is not None) and (index < min_len)
 
             next_token = self.get_next_token(
                     sent,
@@ -80,7 +96,9 @@ class SentenceSampler:
                     index,
                     max_tokens,
                     stop_ratio,
-                    beta)
+                    beta,
+                    avoid_eos,
+                    terminal)
 
             if next_token == self.vocab.eos:
                 break

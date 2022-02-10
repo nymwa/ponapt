@@ -63,7 +63,11 @@ def main():
         terminal = None
 
     for i in range(args.iters):
-        sent = sampler(sent = prefix[:], terminal = terminal)
+        if prefix is None:
+            sent = None
+        else:
+            sent = prefix[:]
+        sent = sampler(sent = sent, terminal = terminal)
         sent = ' '.join([vocab[x] for x in sent])
         sent = postproc(sent)
         print(sent)
