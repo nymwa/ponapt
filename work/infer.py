@@ -21,6 +21,9 @@ def parse_args():
     parser.add_argument('--activation-dropout', type = float, default = 0.2)
     parser.add_argument('--num-layers', type = int, default = 24)
     parser.add_argument('--max-len', type = int, default = 256)
+    parser.add_argument('--iters', type = int, default = 10)
+    parser.add_argument('--prefix', default = None)
+    parser.add_argument('--terminate-quot', action = 'store_true')
     return parser.parse_args()
 
 
@@ -48,8 +51,19 @@ def main():
 
     sampler = SentenceSampler(vocab, model)
 
-    for i in range(30):
-        sent = sampler()
+    if args.prefix is not None:
+        prefix = preproc(args.prefix)
+        prefix = [vocab(token) for token in prefix.split()]
+    else:
+        prefix = None
+
+    if args.terminate_quot:
+        terminal = {vocab('"')}
+    else:
+        terminal = None
+
+    for i in range(args.iters):
+        sent = sampler(sent = prefix[:], terminal = terminal)
         sent = ' '.join([vocab[x] for x in sent])
         sent = postproc(sent)
         print(sent)

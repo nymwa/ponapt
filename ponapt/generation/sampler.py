@@ -64,11 +64,14 @@ class SentenceSampler:
             top_p = 0.8,
             max_tokens = 128,
             stop_ratio = 0.3,
-            beta = 1.0):
+            beta = 1.0,
+            sent = None,
+            terminal = None):
 
-        sent = []
+        if sent is None:
+            sent = []
 
-        for index in range(max_tokens):
+        for index in range(len(sent), max_tokens):
 
             next_token = self.get_next_token(
                     sent,
@@ -82,6 +85,8 @@ class SentenceSampler:
             if next_token == self.vocab.eos:
                 break
             sent.append(next_token)
+            if terminal is not None and next_token in terminal:
+                break
 
         return sent
 
