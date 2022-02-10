@@ -125,7 +125,7 @@ def step_log(scheduler, accum, batch, loss, grad = None):
 
 def save_checkpoint(model, epoch):
     Path('checkpoints').mkdir(parents = True, exist_ok = True)
-    path = 'checkpoints/bert.{}.pt'.format(epoch)
+    path = 'checkpoints/lm.{}.pt'.format(epoch)
     torch.save(model.state_dict(), path)
     logger.info('| checkpoint | saved to {}'.format(path))
 

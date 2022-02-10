@@ -11,7 +11,7 @@ from tabulate import tabulate
 
 def parse_args():
     parser = ArgumentParser()
-    parser.add_argument('--checkpoint', default = 'bert.pt')
+    parser.add_argument('--checkpoint', default = 'lm.pt')
     parser.add_argument('--vocab', default = 'vocab.txt')
     parser.add_argument('--hidden-dim', type = int, default = 512)
     parser.add_argument('--nhead', type = int, default = 8)
