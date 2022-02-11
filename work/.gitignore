@@ -5,3 +5,5 @@ bert.pt
 bert_big.pt
 run_train2.sh
 checkpoints
+aug.txt
+run_infer2.sh
