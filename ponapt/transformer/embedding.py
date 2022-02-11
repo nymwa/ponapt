@@ -10,10 +10,12 @@ class SinusoidalPositionalEmbedding(nn.Module):
             denom = 10000.0):
 
         super().__init__()
+
         self.embedding = nn.Embedding(
                 max_len,
                 d_model
                 ).requires_grad_(False)
+
         pos = torch.arange(0.0, max_len).unsqueeze(-1)
         div = torch.exp(-torch.arange(0, d_model, 2.0) / d_model * torch.log(torch.tensor(denom))) 
         self.embedding.weight[:, 0::2] = torch.sin(div * pos)
@@ -34,23 +36,27 @@ class TransformerEmbedding(nn.Module):
             max_seq_len = 128):
 
         super().__init__()
+
         self.token_embedding = nn.Embedding(
                 d_vocab,
                 d_model,
                 padding_idx = 0)
+
         self.position_embedding = SinusoidalPositionalEmbedding(
                 d_model,
                 max_seq_len,
                 10000.0)
+
         self.norm = nn.LayerNorm(d_model)
         self.dropout = nn.Dropout(dropout)
+        self.embed_scale = torch.sqrt(torch.tensor(d_model))
 
     def forward(
             self,
             x,
             position_ids = None):
 
-        x = self.token_embedding(x)
+        x = self.embed_scale * self.token_embedding(x)
 
         if position_ids is None:
             position_ids = torch.arange(x.size(0), device = x.device).unsqueeze(-1)
