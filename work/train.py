@@ -42,7 +42,7 @@ def parse_args():
     parser.add_argument('--warmup-steps', type = int, default = 8000)
     parser.add_argument('--epochs', type = int, default = 1000)
     parser.add_argument('--save-interval', type = int, default = 100)
-    parser.add_argument('--share-embedding', action = store_true)
+    parser.add_argument('--share-embedding', action = 'store_true')
     return parser.parse_args()
 
 
