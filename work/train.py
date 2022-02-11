@@ -42,6 +42,7 @@ def parse_args():
     parser.add_argument('--warmup-steps', type = int, default = 8000)
     parser.add_argument('--epochs', type = int, default = 1000)
     parser.add_argument('--save-interval', type = int, default = 100)
+    parser.add_argument('--share-embedding', action = store_true)
     return parser.parse_args()
 
 
@@ -85,6 +86,8 @@ def get_model(vocab, args):
             args.num_layers,
             padding_idx = vocab.pad,
             max_len = args.max_len)
+    if args.share_embedding:
+        model.fc.weight = model.embedding.embedding.weight
     model = model.cuda()
     logger.info('#params : {} ({})'.format(
         sum(p.numel() for p in model.parameters()),
