@@ -16,9 +16,6 @@ def parse_args():
     parser.add_argument('--hidden-dim', type = int, default = 512)
     parser.add_argument('--nhead', type = int, default = 8)
     parser.add_argument('--feedforward-dim', type = int, default = 2048)
-    parser.add_argument('--dropout', type = float, default = 0.3)
-    parser.add_argument('--attention-dropout', type = float, default = 0.2)
-    parser.add_argument('--activation-dropout', type = float, default = 0.2)
     parser.add_argument('--num-layers', type = int, default = 24)
     parser.add_argument('--max-len', type = int, default = 256)
     parser.add_argument('--beta', type = float, default = 1.0)
@@ -37,9 +34,7 @@ def main():
             args.hidden_dim,
             args.nhead,
             args.feedforward_dim,
-            args.dropout,
-            args.attention_dropout,
-            args.activation_dropout,
+            0, 0, 0, 0,
             args.num_layers,
             padding_idx = vocab.pad,
             max_len = args.max_len)
