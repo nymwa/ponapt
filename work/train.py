@@ -87,7 +87,7 @@ def get_model(vocab, args):
             padding_idx = vocab.pad,
             max_len = args.max_len)
     if args.share_embedding:
-        model.fc.weight = model.embedding.embedding.weight
+        model.fc.weight = model.embedding.token_embedding.weight
     model = model.cuda()
     logger.info('#params : {} ({})'.format(
         sum(p.numel() for p in model.parameters()),
