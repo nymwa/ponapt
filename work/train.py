@@ -24,16 +24,16 @@ def parse_args():
     parser = ArgumentParser()
     parser.add_argument('--vocab', default = 'vocab.txt')
     parser.add_argument('--max-tokens', type = int, default = 6000)
-    parser.add_argument('--replace-th', type = float, default = 0.10)
     parser.add_argument('--shift-prob', type = float, default = 0.90)
     parser.add_argument('--max-shift', type = int, default = 128)
     parser.add_argument('--hidden-dim', type = int, default = 512)
     parser.add_argument('--nhead', type = int, default = 8)
     parser.add_argument('--feedforward-dim', type = int, default = 2048)
-    parser.add_argument('--dropout', type = float, default = 0.3)
-    parser.add_argument('--attention-dropout', type = float, default = 0.2)
-    parser.add_argument('--activation-dropout', type = float, default = 0.2)
-    parser.add_argument('--num-layers', type = int, default = 24)
+    parser.add_argument('--dropout', type = float, default = 0.1)
+    parser.add_argument('--word-dropout', type = float, default = 0.1)
+    parser.add_argument('--attention-dropout', type = float, default = 0.0)
+    parser.add_argument('--activation-dropout', type = float, default = 0.0)
+    parser.add_argument('--num-layers', type = int, default = 6)
     parser.add_argument('--max-len', type = int, default = 256)
     parser.add_argument('--label-smoothing', type = float, default = 0.1)
     parser.add_argument('--lr', type = float, default = 0.0001)
@@ -59,7 +59,6 @@ def load_loaders(vocab, args):
     valid_sampler = FixedSampler(valid_dataset, args.max_tokens)
     train_collator = TrainingCollator(
             vocab,
-            args.replace_th,
             args.shift_prob,
             args.max_shift)
     valid_collator = Collator(vocab)
@@ -81,6 +80,7 @@ def get_model(vocab, args):
             args.nhead,
             args.feedforward_dim,
             args.dropout,
+            args.word_dropout,
             args.attention_dropout,
             args.activation_dropout,
             args.num_layers,

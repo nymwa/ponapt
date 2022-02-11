@@ -36,12 +36,10 @@ class TrainingCollator(Collator):
     def __init__(
             self,
             vocab,
-            replace_th = 0.03,
             shift_prob = 0.80,
             max_shift = 64):
 
         super().__init__(vocab)
-        self.replace_th = replace_th
         self.shift_prob = shift_prob
         self.max_shift = max_shift
 
@@ -52,12 +50,6 @@ class TrainingCollator(Collator):
 
         inputs = pad(inputs, padding_value = self.vocab.pad)
         outputs = pad(outputs, padding_value = self.vocab.pad)
-
-        rand_tensor = torch.rand(inputs.shape)
-        rand_token = torch.randint(self.vocab.unk, len(self.vocab), inputs.shape)
-        normal_token = inputs > self.vocab.unk
-        position_to_replace = (rand_tensor < self.replace_th) & normal_token
-        inputs.masked_scatter_(position_to_replace, rand_token)
 
         if rd.random() < self.shift_prob:
             dist = rd.randrange(self.max_shift)

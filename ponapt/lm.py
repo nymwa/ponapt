@@ -11,6 +11,7 @@ class LM(nn.Module):
             nhead,
             dim_feedforward,
             dropout,
+            word_dropout,
             attention_dropout,
             activation_dropout,
             num_layers,
@@ -23,6 +24,7 @@ class LM(nn.Module):
                 d_vocab,
                 d_model,
                 dropout,
+                word_dropout,
                 padding_idx,
                 max_len)
 

@@ -1,6 +1,18 @@
 import torch
 import torch.nn as nn
 
+class WordDropout(nn.Module):
+
+    def __init__(self, p):
+        super().__init__()
+        self.p = p
+
+    def forward(self, x):
+        if self.training:
+            x.masked_fill_(torch.rand(*x.shape[: -1], 1, device = x.device) < self.p, 0)
+        return x
+
+
 class SinusoidalPositionalEmbedding(nn.Module):
 
     def __init__(
@@ -32,6 +44,7 @@ class TransformerEmbedding(nn.Module):
             d_vocab,
             d_model,
             dropout,
+            word_dropout,
             padding_idx = 0,
             max_seq_len = 128):
 
@@ -41,6 +54,8 @@ class TransformerEmbedding(nn.Module):
                 d_vocab,
                 d_model,
                 padding_idx = 0)
+
+        self.word_dropout = WordDropout(word_dropout)
 
         self.position_embedding = SinusoidalPositionalEmbedding(
                 d_model,
@@ -57,6 +72,7 @@ class TransformerEmbedding(nn.Module):
             position_ids = None):
 
         x = self.embed_scale * self.token_embedding(x)
+        x = self.word_dropout(x)
 
         if position_ids is None:
             position_ids = torch.arange(x.size(0), device = x.device).unsqueeze(-1)
