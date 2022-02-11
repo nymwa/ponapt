@@ -35,7 +35,7 @@ class LM(nn.Module):
                 activation_dropout,
                 num_layers)
 
-        self.fc = nn.Linear(d_model, d_vocab)
+        self.fc = nn.Linear(d_model, d_vocab, bias = False)
 
     def forward(self, batch):
 
