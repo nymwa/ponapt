@@ -140,7 +140,8 @@ def save_checkpoint(model, epoch):
 def training(
         epochs,
         save_interval,
-        criterion,
+        train_criterion,
+        valid_criterion,
         optimizer,
         scheduler,
         clip_norm,
@@ -154,7 +155,7 @@ def training(
         model.train()
         accum = Accumulator('train', epoch, len(train_loader))
         for step, batch in enumerate(train_loader):
-            loss, grad = train_step(criterion, optimizer, scheduler, clip_norm, model, batch)
+            loss, grad = train_step(train_criterion, optimizer, scheduler, clip_norm, model, batch)
             num_steps += 1
             step_log(scheduler, accum, batch, loss, grad)
         logger.info(accum.epoch_log(num_steps))
@@ -164,7 +165,7 @@ def training(
         model.eval()
         accum = Accumulator('valid', epoch, len(valid_loader))
         for step, batch in enumerate(valid_loader):
-            loss = valid_step(criterion, model, batch)
+            loss = valid_step(valid_criterion, model, batch)
             step_log(scheduler, accum, batch, loss)
         logger.info(accum.epoch_log(num_steps))
 
@@ -177,9 +178,12 @@ def main():
     train_loader, valid_loader = load_loaders(vocab, args)
     model = get_model(vocab, args)
 
-    criterion = nn.CrossEntropyLoss(
+    train_criterion = nn.CrossEntropyLoss(
             ignore_index = vocab.pad,
             label_smoothing = args.label_smoothing)
+    valid_criterion = nn.CrossEntropyLoss(
+            ignore_index = vocab.pad,
+            label_smoothing = 0.0)
     optimizer = optim.AdamW(
             model.parameters(),
             lr = args.lr,
@@ -190,7 +194,8 @@ def main():
     training(
         args.epochs,
         args.save_interval,
-        criterion,
+        train_criterion,
+        valid_criterion,
         optimizer,
         scheduler,
         clip_norm,
