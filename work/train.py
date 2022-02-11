@@ -86,8 +86,12 @@ def get_model(vocab, args):
             args.num_layers,
             padding_idx = vocab.pad,
             max_len = args.max_len)
+
     if args.share_embedding:
-        model.fc.weight = model.embedding.token_embedding.weight
+        # なぜか式の左右を逆にすると動かない
+        # パラメータの初期化の問題かもしれないが謎
+        model.embedding.token_embedding.weight = model.fc.weight
+
     model = model.cuda()
     logger.info('#params : {} ({})'.format(
         sum(p.numel() for p in model.parameters()),
