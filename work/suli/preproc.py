@@ -1,3 +1,4 @@
+import math
 from collections import Counter
 from contextlib import ExitStack
 from seriejo import SeriejoWriter
@@ -5,21 +6,36 @@ from pathlib import Path
 import random as rd
 from ponapt.vocab import Vocab
 from ponapt.preproc import LMPreproc
-from ponapt.postproc import LMPostproc
 from ponapt.log import init_logging
 from logging import getLogger
+from collections import Counter
 init_logging()
 logger = getLogger(__name__)
 
 path_list = [
-        '../../tokipona-corpus-collection/100tokipona/100tokipona.txt',
-        '../../tokipona-corpus-collection/tokipona1000/tokipona1000.txt',
-        '../../tokipona-corpus-collection/tatoeba/tonconved.txt',
-        '../../tokipona-corpus-collection/pu/pu.txt',
-        '../../tokipona-corpus-collection/matthew/dave.txt',
-        '../../tokipona-corpus-collection/matthew/mika.txt',
-        '../../tokipona-corpus-collection/matthew/ote.txt',
-        '../../tokipona-corpus-collection/matthew/prince.txt']
+        '../../../tokipona-corpus-collection/100tokipona/100tokipona.txt',
+        '../../../tokipona-corpus-collection/tokipona1000/tokipona1000.txt',
+        '../../../tokipona-corpus-collection/tatoeba/tonconved.txt',
+        '../../../tokipona-corpus-collection/pu/pu.txt',
+        '../../../tokipona-corpus-collection/matthew/dave.txt',
+        '../../../tokipona-corpus-collection/matthew/mika.txt',
+        '../../../tokipona-corpus-collection/matthew/ote.txt',
+        '../../../tokipona-corpus-collection/matthew/prince.txt',
+        '../../../tokipona-corpus-collection/nanko/panelopi.txt',
+        '../../../tokipona-corpus-collection/sita/namako.txt']
+
+
+augmented_list = [
+        '../../../tokipona-corpus-collection/augmented/data.0.txt',
+        '../../../tokipona-corpus-collection/augmented/data.1.txt',
+        '../../../tokipona-corpus-collection/augmented/data.2.txt',
+        '../../../tokipona-corpus-collection/augmented/data.3.txt',
+        '../../../tokipona-corpus-collection/augmented/data.4.txt',
+        '../../../tokipona-corpus-collection/augmented/data.5.txt',
+        '../../../tokipona-corpus-collection/augmented/data.6.txt',
+        '../../../tokipona-corpus-collection/augmented/data.7.txt',
+        '../../../tokipona-corpus-collection/augmented/data.8.txt',
+        '../../../tokipona-corpus-collection/augmented/data.9.txt']
 
 
 def sents_to_data(vocab, sents):
@@ -37,32 +53,51 @@ def make_seriejo(base, name, data):
             f.write(x)
     logger.info('Write Seriejo ({}/{}): {}'.format(base, name, len(data)))
 
-
-def save_sents(base, name, data):
-    postproc = LMPostproc()
-    Path(base).mkdir(parents = True, exist_ok = True)
-    with open('{}/{}.txt'.format(base, name), 'w') as f:
-        for sent in data:
-            print(postproc(sent), file = f)
-    logger.info('Save sents ({}/{}): {}'.format(base, name, len(data)))
-
-
-def get_sents():
+def load_corpora(corpora):
     preproc = LMPreproc()
 
     with ExitStack() as stack:
         sents = [
             preproc(sent)
-            for path
-            in path_list
+            for corpus
+            in corpora
             for sent
-            in stack.enter_context(open(path))]
+            in stack.enter_context(open(corpus))]
+    return sents
+
+
+
+def get_sents():
+    sents = load_corpora(path_list)
+    logger.info('data loaded')
 
     sents = [
         sent
         for sent
         in sents
-        if 1 <= len(sent.split()) <= 100]
+        if 1 <= len(sent.split()) <= 120]
+    logger.info('data filtered')
+    return sents
+
+
+def get_augmented_sents():
+    raw_sents = load_corpora(augmented_list)
+    logger.info('augmented data loaded')
+
+    counter = Counter(raw_sents)
+    sents = []
+    for sent, freq in counter.most_common():
+        n = math.ceil(math.sqrt(freq))
+        for _ in range(n):
+            sents.append(sent)
+    logger.info('augmented data filtered (1)')
+
+    sents = [
+        sent
+        for sent
+        in sents
+        if 1 <= len(sent.split()) <= 120]
+    logger.info('augmented data filtered (2)')
     return sents
 
 
@@ -100,9 +135,7 @@ def main():
             sents,
             valid_size = 2000,
             test_size = 2000)
-    save_sents('data', 'train', train_sents)
-    save_sents('data', 'valid', valid_sents)
-    save_sents('data', 'test', test_sents)
+    train_sents += get_augmented_sents()
 
     tokens = make_tokens(train_sents)
     with open('vocab.txt', 'w') as f:

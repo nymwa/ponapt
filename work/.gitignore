@@ -1,5 +1,6 @@
 data
 tmp
+data_tmp
 train.log
 bert.pt
 bert_big.pt
