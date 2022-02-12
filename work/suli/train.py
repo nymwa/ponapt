@@ -41,7 +41,7 @@ def parse_args():
     parser.add_argument('--clip-norm', type = float, default = 3.0)
     parser.add_argument('--warmup-steps', type = int, default = 4000)
     parser.add_argument('--epochs', type = int, default = 100)
-    parser.add_argument('--save-interval', type = int, default = 10)
+    parser.add_argument('--save-interval', type = int, default = 5)
     parser.add_argument('--share-embedding', action = 'store_true')
     return parser.parse_args()
 
