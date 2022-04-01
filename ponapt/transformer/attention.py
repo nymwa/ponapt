@@ -23,11 +23,11 @@ class SelfAttentionSubLayer(nn.Module):
             attn_mask,
             padding_mask):
 
-        z = self.norm(x)
         z, _ = self.self_attn(
-                z, z, z,
+                x, x, x,
                 attn_mask = attn_mask,
                 key_padding_mask = padding_mask)
         x = x + self.dropout(z)
+        x = self.norm(x)
         return x
 

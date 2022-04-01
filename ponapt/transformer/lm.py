@@ -14,6 +14,7 @@ class TransformerLM(nn.Module):
             num_layers):
 
         super().__init__()
+
         self.layers = nn.ModuleList([
             TransformerLMLayer(
                 d_model,
@@ -24,7 +25,6 @@ class TransformerLM(nn.Module):
                 activation_dropout)
             for _
             in range(num_layers)])
-        self.norm = nn.LayerNorm(d_model)
 
     def forward(
             self,
@@ -38,6 +38,5 @@ class TransformerLM(nn.Module):
                     attn_mask = attn_mask,
                     padding_mask = padding_mask)
 
-        x = self.norm(x)
         return x
 

@@ -4,5 +4,9 @@ setuptools.setup(
         name = 'ponapt',
         packages = setuptools.find_packages(),
         install_requires=[
-            'numpy', 'torch', 'tqdm'],)
+            'numpy', 'torch', 'tqdm'],
+        entry_points = {
+            'console_scripts':[
+                'ponapt-preproc = ponapt.cli.preproc:main',
+                'ponapt-train = ponapt.cli.train:main',]})
 

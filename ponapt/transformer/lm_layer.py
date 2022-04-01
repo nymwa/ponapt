@@ -26,17 +26,20 @@ class TransformerLMLayer(nn.Module):
                 dim_feedforward,
                 activation_dropout)
 
+        self.norm = nn.LayerNorm(d_model)
+
     def forward(
             self,
             x,
             attn_mask = None,
             padding_mask = None):
 
-        x = self.self_attn_layer(
+        z = self.self_attn_layer(
                 x,
                 attn_mask,
                 padding_mask)
 
-        x = self.feed_forward_layer(x)
+        x = x + self.feed_forward_layer(z)
+        x = self.norm(x)
         return x
 
