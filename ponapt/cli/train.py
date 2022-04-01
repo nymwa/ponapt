@@ -29,7 +29,7 @@ def parse_args():
     parser.add_argument('--hidden-dim', type = int, default = 512)
     parser.add_argument('--nhead', type = int, default = 8)
     parser.add_argument('--feedforward-dim', type = int, default = 2048)
-    parser.add_argument('--num-layers', type = int, default = 18)
+    parser.add_argument('--num-layers', type = int, default = 6)
     parser.add_argument('--dropout', type = float, default = 0.3)
     parser.add_argument('--word-dropout', type = float, default = 0.3)
     parser.add_argument('--attention-dropout', type = float, default = 0.2)
