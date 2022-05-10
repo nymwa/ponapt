@@ -8,5 +8,6 @@ setuptools.setup(
         entry_points = {
             'console_scripts':[
                 'ponapt-preproc = ponapt.cli.preproc:main',
-                'ponapt-train = ponapt.cli.train:main',]})
+                'ponapt-train = ponapt.cli.train:main',
+                'ponapt-sample = ponapt.cli.sample:main',]})
 

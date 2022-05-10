@@ -19,13 +19,17 @@ class Collator:
     def __init__(self, vocab):
         self.vocab = vocab
 
-    def __call__(self, batch):
+    def make_tensors(self, batch):
         inputs  = [torch.tensor([self.vocab.bos] + sent) for sent in batch]
         outputs = [torch.tensor(sent + [self.vocab.eos]) for sent in batch]
         lengths = [len(sent) for sent in batch]
 
         inputs = pad(inputs, padding_value = self.vocab.pad)
-        outputs = pad(outputs, padding_value = self.vocab.pad)
+        outputs = pad(outputs, padding_value = -100)
+        return inputs, outputs, lengths
+
+    def __call__(self, batch):
+        inputs, outputs, lengths = self.make_tensors(batch)
         padding = (inputs == self.vocab.pad).T
         mask = generate_square_subsequent_mask(outputs.shape[0])
         return Batch(inputs, outputs, lengths, None, padding, mask)
@@ -44,12 +48,7 @@ class TrainingCollator(Collator):
         self.max_shift = max_shift
 
     def __call__(self, batch):
-        inputs  = [torch.tensor([self.vocab.bos] + sent) for sent in batch]
-        outputs = [torch.tensor(sent + [self.vocab.eos]) for sent in batch]
-        lengths = [len(sent) for sent in batch]
-
-        inputs = pad(inputs, padding_value = self.vocab.pad)
-        outputs = pad(outputs, padding_value = self.vocab.pad)
+        inputs, outputs, lengths = self.make_tensors(batch)
 
         if rd.random() < self.shift_prob:
             dist = rd.randrange(self.max_shift)

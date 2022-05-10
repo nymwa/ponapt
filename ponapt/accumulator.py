@@ -1,63 +1,72 @@
 class Accumulator:
 
-    def __init__(
-            self,
-            name,
-            epoch,
-            num_batches):
-
+    def __init__(self, name):
         self.name = name
-        self.epoch = epoch
-        self.num_batches = num_batches
 
-        self.losss = []
-        self.wpbs = []
-        self.spbs = []
-        self.lrs = []
-        self.grads = []
-        self.miscs = []
+        self.clear_epoch()
+        self.clear_tmp()
 
-    def update(self, batch, loss, lr, grad):
-        self.losss.append(loss.item())
-        self.wpbs.append(batch.get_num_tokens())
-        self.spbs.append(len(batch))
-        self.lrs.append(lr)
-        self.grads.append(grad)
-        self.miscs.append(batch.misc)
+    def update(self, batch, loss, lr):
+        self.tmp_loss_list.append(loss)
+        self.tmp_wpb_list.append(batch.get_num_tokens())
+        self.tmp_spb_list.append(len(batch))
+        self.tmp_lr_list.append(lr)
 
-    def step_log(self):
+    def step_tmp(self):
+        loss = sum(self.tmp_loss_list) / len(self.tmp_loss_list)
+        wpb = sum(self.tmp_wpb_list)
+        spb = sum(self.tmp_spb_list)
+        lr = sum(self.tmp_lr_list) / len(self.tmp_lr_list)
+
+        self.loss_list.append(loss)
+        self.wpb_list.append(wpb)
+        self.spb_list.append(spb)
+        self.lr_list.append(lr)
+        return loss, wpb, spb, lr
+
+    def clear_tmp(self):
+        self.tmp_loss_list = []
+        self.tmp_wpb_list = []
+        self.tmp_spb_list = []
+        self.tmp_lr_list = []
+
+    def clear_epoch(self):
+        self.loss_list = []
+        self.wpb_list = []
+        self.spb_list = []
+        self.lr_list = []
+
+    def step_log(self, epoch, num_steps, grad = None):
+        loss, wpb, spb, lr = self.step_tmp()
+        self.clear_tmp()
+
         line = '| {}-inner'.format(self.name)
         line += ' | epoch {}, {}/{}'.format(
-                self.epoch,
-                len(self.spbs),
-                self.num_batches)
-        line += ' | loss {:.4f}'.format(self.losss[-1])
-        line += ' | lr {:.8f}'.format(self.lrs[-1])
-        if self.grads[0] is not None:
-            line += ' | grad {:.4f}'.format(self.grads[-1])
-        line += ' | w/b {}'.format(self.wpbs[-1])
-        line += ' | s/b {}'.format(self.spbs[-1])
-
-        if self.miscs[-1] is not None:
-            for key, value in self.miscs[-1].items():
-                line += ' | {} {}'.format(key, value)
+                epoch,
+                len(self.spb_list),
+                num_steps)
+        line += ' | loss {:.4f}'.format(loss)
+        line += ' | lr {:.8f}'.format(lr)
+        if grad:
+            line += ' | grad {:.4f}'.format(grad)
+        line += ' | w/b {}'.format(wpb)
+        line += ' | s/b {}'.format(spb)
 
         return line
 
     def avg(self, lst):
-        num_examples = sum(self.spbs)
-        return sum([n * x for n, x in zip(self.spbs, lst)]) / num_examples
+        num_examples = sum(self.spb_list)
+        return sum([n * x for n, x in zip(self.spb_list, lst)]) / num_examples
 
-    def epoch_log(self, num_steps = None):
+    def epoch_log(self, epoch, num_steps = None):
         line = '| {}'.format(self.name)
-        line += ' | epoch {}'.format(self.epoch)
-        line += ' | loss {:.4f}'.format(self.avg(self.losss))
-        line += ' | lr {:.8f}'.format(self.avg(self.lrs))
-        if self.grads[0] is not None:
-            line += ' | grad {:.4f}'.format(self.avg(self.grads))
-        line += ' | w/b {:.1f}'.format(self.avg(self.wpbs))
-        line += ' | s/b {:.1f}'.format(self.avg(self.spbs))
+        line += ' | epoch {}'.format(epoch)
+        line += ' | loss {:.4f}'.format(self.avg(self.loss_list))
+        line += ' | lr {:.8f}'.format(self.avg(self.lr_list))
+        line += ' | w/b {:.1f}'.format(self.avg(self.wpb_list))
+        line += ' | s/b {:.1f}'.format(self.avg(self.spb_list))
         if num_steps is not None:
             line += ' | steps {}'.format(num_steps)
+        self.clear_epoch()
         return line
 

@@ -21,8 +21,15 @@ def sents_to_data(vocab, sents):
     return [sent_to_data(sent) for sent in sents]
 
 
-def make_seriejo(base, name, data):
+def make_raw(base, name, sents):
+    Path(base).mkdir(parents = True, exist_ok = True)
 
+    with open('{}/{}.txt'.format(base, name), 'w') as f:
+        for x in sents:
+            print(x, file = f)
+
+
+def make_seriejo(base, name, data):
     Path(base).mkdir(parents = True, exist_ok = True)
 
     with SeriejoWriter('{}/{}'.format(base, name)) as f:
@@ -91,6 +98,9 @@ def main():
 
     vocab = Vocab(tokens)
     valid_sents = get_valid_sents(args.valid)
+
+    make_raw('data', 'train', train_sents)
+    make_raw('data', 'valid', valid_sents)
 
     train_data = sents_to_data(vocab, train_sents)
     valid_data = sents_to_data(vocab, valid_sents)

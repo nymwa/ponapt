@@ -10,10 +10,13 @@ from ponapt.vocab import load_vocab
 from ponapt.dataset import Dataset
 from ponapt.sampler import FixedSampler, RandomSampler
 from ponapt.collator import Collator, TrainingCollator
-from ponapt.lm import LM
 
 from ponapt.accumulator import Accumulator
-from ponapt.scheduler import WarmupScheduler
+
+from ponapt.train.model import get_lm_model
+from ponapt.train.opter import Opter
+from ponapt.train.losscalc import PonaptLossCalc
+from ponapt.train.trainer import Trainer
 
 from ponapt.log import init_logging
 from logging import getLogger
@@ -26,6 +29,7 @@ def parse_args():
     parser.add_argument('--max-tokens', type = int, default = 4000)
     parser.add_argument('--shift-prob', type = float, default = 0.99)
     parser.add_argument('--max-shift', type = int, default = 128)
+
     parser.add_argument('--hidden-dim', type = int, default = 512)
     parser.add_argument('--nhead', type = int, default = 8)
     parser.add_argument('--feedforward-dim', type = int, default = 2048)
@@ -35,14 +39,19 @@ def parse_args():
     parser.add_argument('--attention-dropout', type = float, default = 0.2)
     parser.add_argument('--activation-dropout', type = float, default = 0.2)
     parser.add_argument('--max-len', type = int, default = 256)
+    parser.add_argument('--no-share-embedding', action = 'store_true')
+
     parser.add_argument('--label-smoothing', type = float, default = 0.0)
     parser.add_argument('--lr', type = float, default = 0.0001)
     parser.add_argument('--weight-decay', type = float, default = 0.01)
-    parser.add_argument('--clip-norm', type = float, default = 3.0)
+    parser.add_argument('--max-grad-norm', type = float, default = 1.0)
+    parser.add_argument('--scheduler', default = 'linexp')
     parser.add_argument('--warmup-steps', type = int, default = 4000)
+    parser.add_argument('--start-factor', type = float, default = 1.0)
+
     parser.add_argument('--epochs', type = int, default = 200)
-    parser.add_argument('--save-interval', type = int, default = 20)
-    parser.add_argument('--no-share-embedding', action = 'store_true')
+    parser.add_argument('--step-interval', type = int, default = 1)
+    parser.add_argument('--save-interval', type = int, default = 10)
     return parser.parse_args()
 
 
@@ -73,30 +82,6 @@ def load_loaders(vocab, args):
     return train_loader, valid_loader
 
 
-def get_model(vocab, args):
-    model = LM(
-            len(vocab),
-            args.hidden_dim,
-            args.nhead,
-            args.feedforward_dim,
-            args.dropout,
-            args.word_dropout,
-            args.attention_dropout,
-            args.activation_dropout,
-            args.num_layers,
-            padding_idx = vocab.pad,
-            max_len = args.max_len)
-
-    if not args.no_share_embedding:
-        # なぜか式の左右を逆にすると動かない
-        # パラメータの初期化の問題かもしれないが謎
-        model.embedding.token_embedding.weight = model.fc.weight
-
-    model = model.cuda()
-    logger.info('#params : {} ({})'.format(
-        sum(p.numel() for p in model.parameters()),
-        sum(p.numel() for p in model.parameters() if p.requires_grad)))
-    return model
 
 
 def train_step(criterion, optimizer, scheduler, clip_norm, model, batch):
@@ -176,30 +161,32 @@ def main():
 
     vocab = load_vocab(args.vocab)
     train_loader, valid_loader = load_loaders(vocab, args)
-    model = get_model(vocab, args)
 
-    train_criterion = nn.CrossEntropyLoss(
-            ignore_index = vocab.pad,
-            label_smoothing = args.label_smoothing)
-    valid_criterion = nn.CrossEntropyLoss(
-            ignore_index = vocab.pad,
-            label_smoothing = 0.0)
-    optimizer = optim.AdamW(
-            model.parameters(),
-            lr = args.lr,
+    model = get_lm_model(vocab, args)
+    model = model.cuda()
+    logger.info('#params : {} ({})'.format(
+        sum(p.numel() for p in model.parameters()),
+        sum(p.numel() for p in model.parameters() if p.requires_grad)))
+
+    opter = Opter(
+            model,
+            args.lr,
+            max_grad_norm = args.max_grad_norm,
+            scheduler = args.scheduler,
+            warmup_steps = args.warmup_steps,
+            start_factor = args.start_factor,
             weight_decay = args.weight_decay)
-    scheduler = WarmupScheduler(optimizer, args.warmup_steps)
-    clip_norm = args.clip_norm
+    losscalc = PonaptLossCalc(label_smoothing = args.label_smoothing)
 
-    training(
-        args.epochs,
-        args.save_interval,
-        train_criterion,
-        valid_criterion,
-        optimizer,
-        scheduler,
-        clip_norm,
-        train_loader,
-        valid_loader,
-        model)
+    trainer = Trainer(
+            train_loader,
+            valid_loader,
+            model,
+            opter,
+            losscalc,
+            args.epochs,
+            args.step_interval,
+            args.save_interval)
+
+    trainer.run()
 
