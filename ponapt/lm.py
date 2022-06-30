@@ -2,6 +2,18 @@ import torch.nn as nn
 from .transformer.embedding import TransformerEmbedding
 from .transformer.lm import TransformerLM
 
+def make_layer_indices(num_layers, repeat, reverse):
+    indices = [
+        i
+        for i in range(num_layers)
+        for _ in range(repeat)]
+
+    if reverse:
+        indices = indices + indices[::-1]
+
+    return indices
+
+
 class LM(nn.Module):
 
     def __init__(
@@ -16,9 +28,16 @@ class LM(nn.Module):
             activation_dropout,
             num_layers,
             padding_idx = 0,
-            max_len = 64):
+            max_len = 64,
+            repeat = 1,
+            reverse = False):
 
         super().__init__()
+
+        self.indices = make_layer_indices(
+                num_layers,
+                repeat,
+                reverse)
 
         self.embedding = TransformerEmbedding(
                 d_vocab,
@@ -48,7 +67,8 @@ class LM(nn.Module):
         x = self.lm(
                 x,
                 attn_mask = batch.mask,
-                padding_mask = batch.padding)
+                padding_mask = batch.padding,
+                indices = self.indices)
 
         x = self.fc(x)
         return x

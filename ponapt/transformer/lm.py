@@ -15,6 +15,7 @@ class TransformerLM(nn.Module):
 
         super().__init__()
 
+        self.num_layers = num_layers
         self.layers = nn.ModuleList([
             TransformerLMLayer(
                 d_model,
@@ -30,13 +31,18 @@ class TransformerLM(nn.Module):
             self,
             x,
             attn_mask = None,
-            padding_mask = None):
+            padding_mask = None,
+            indices = None):
 
-        for layer in self.layers:
+        if indices is None:
+            indices = range(self.num_layers)
+
+        for index in indices:
+            layer = self.layers[index]
             x = layer(
-                    x,
-                    attn_mask = attn_mask,
-                    padding_mask = padding_mask)
+                x,
+                attn_mask = attn_mask,
+                padding_mask = padding_mask)
 
         return x
 

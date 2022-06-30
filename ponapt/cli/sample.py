@@ -18,6 +18,8 @@ def parse_args():
     parser.add_argument('--feedforward-dim', type = int, default = 2048)
     parser.add_argument('--num-layers', type = int, default = 6)
     parser.add_argument('--max-len', type = int, default = 256)
+    parser.add_argument('--repeat', type = int, default = 1)
+    parser.add_argument('--reverse', action = 'store_true')
     parser.add_argument('--iters', type = int, default = 10)
     parser.add_argument('--prefix', default = None)
     parser.add_argument('--terminate-quot', action = 'store_true')
@@ -38,7 +40,9 @@ def main():
             0, 0, 0, 0,
             args.num_layers,
             padding_idx = vocab.pad,
-            max_len = args.max_len)
+            max_len = args.max_len,
+            repeat = args.repeat,
+            reverse = args.reverse)
     model.load_state_dict(torch.load(args.checkpoint, map_location = 'cpu'))
     if torch.cuda.is_available():
         model = model.cuda()

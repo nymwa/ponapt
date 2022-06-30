@@ -34,11 +34,14 @@ def parse_args():
     parser.add_argument('--nhead', type = int, default = 8)
     parser.add_argument('--feedforward-dim', type = int, default = 2048)
     parser.add_argument('--num-layers', type = int, default = 6)
+    parser.add_argument('--max-len', type = int, default = 256)
+    parser.add_argument('--repeat', type = int, default = 1)
+    parser.add_argument('--reverse', action = 'store_true')
+
     parser.add_argument('--dropout', type = float, default = 0.3)
     parser.add_argument('--word-dropout', type = float, default = 0.3)
     parser.add_argument('--attention-dropout', type = float, default = 0.2)
     parser.add_argument('--activation-dropout', type = float, default = 0.2)
-    parser.add_argument('--max-len', type = int, default = 256)
     parser.add_argument('--no-share-embedding', action = 'store_true')
 
     parser.add_argument('--label-smoothing', type = float, default = 0.0)

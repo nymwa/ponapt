@@ -12,7 +12,9 @@ def get_lm_model(vocab, args):
             args.activation_dropout,
             args.num_layers,
             padding_idx = vocab.pad,
-            max_len = args.max_len)
+            max_len = args.max_len,
+            repeat = args.repeat,
+            reverse = args.reverse)
 
     if not args.no_share_embedding:
         # なぜか式の左右を逆にすると動かない
